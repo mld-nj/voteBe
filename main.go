@@ -19,9 +19,20 @@ func main() {
 		panic(err)
 	}
 	r := gin.Default()
+	
 	//跨域
 	r.Use(api.Cors())
 	r.GET("/channel", func(c *gin.Context) {
+		var channel structs.VoteChannel
+		channelId:=c.DefaultQuery("channelId","1")
+		db.Where("channelId=?",channelId).Find(&channel)
+		dJson, err := json.Marshal(channel)
+		if err != nil {
+			fmt.Println("json化错误")
+		}
+		c.JSON(http.StatusOK, string(dJson))
+	})
+	r.GET("/allChannel", func(c *gin.Context) {
 		var channels []structs.VoteChannel
 		db.Find(&channels)
 		dJson, err := json.Marshal(channels)
