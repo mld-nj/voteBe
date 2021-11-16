@@ -51,5 +51,44 @@ func main() {
 		}
 		c.JSON(http.StatusOK, string(dJson))
 	})
+	r.POST("/login",func(c *gin.Context) {
+		username := c.PostForm("username")
+		password := c.PostForm("password")
+		c.String(200,"hello,%s,密码为:%s",username,password)
+	})
+	r.GET("/vote",func(c *gin.Context) {
+		reqIP := c.ClientIP()
+		if reqIP == "::1" {
+			reqIP = "127.0.0.1"
+		}
+		optionId1:=c.DefaultQuery("optionId1","0")
+		optionId2:=c.DefaultQuery("optionId2","0")
+		optionId3:=c.DefaultQuery("optionId3","0")
+		var entity structs.VoteEntity
+		entityResult:=db.Where("Ip =?",reqIP).Find(&entity)
+		fmt.Println(entityResult.RowsAffected)
+		if(entityResult.RowsAffected!=0){
+			c.String(500,"你已经投过票了")
+			return
+		}
+		// 通过 `RowsAffected` 得到更新的记录数
+		result1:=db.Model(structs.VoteOption{}).Where("optionId = ?", optionId1).Update("count", gorm.Expr("count + ?",1))
+		result2:=db.Model(structs.VoteOption{}).Where("optionId = ?", optionId2).Update("count", gorm.Expr("count + ?",1))
+		result3:=db.Model(structs.VoteOption{}).Where("optionId = ?", optionId3).Update("count", gorm.Expr("count + ?",1))
+		if(result1.Error==nil&&result2.Error==nil&&result3.Error==nil){
+			// 条件更新
+			user := structs.VoteEntity{Ip: reqIP}
+
+			result := db.Create(&user) // 通过数据的指针来创建
+			if(result.Error==nil){
+				c.String(200,"投票成功")
+			}
+
+		}else{
+			c.String(500,"投票失败")
+		}
+	// result.RowsAffected // 更新的记录数
+	// result.Error        // 更新的错误
+	})
 	r.Run()
 }

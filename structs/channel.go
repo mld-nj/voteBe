@@ -19,3 +19,12 @@ type VoteOption struct {
 func (VoteOption) TableName() string {
 	return "voteOption"
 }
+
+type VoteEntity struct {
+	Ip string
+	Id int64
+}
+
+func (VoteEntity) TableName() string {
+	return "voteentity"
+}
